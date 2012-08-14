@@ -11,10 +11,19 @@
 <div id="steps-started">
   <ol class="steps-buttons">
     <li class="first {{ 0|wizard_active(step) }}">
-      <p>{{ _('PICK A CATEGORY') }}</p>
+      {% call wizard_breadcrumb(0, step, url('badges.new.step1')) %}
+        <p>{{ _('PICK A CATEGORY') }}</p>
+      {% endcall %}
     </li>
     <li class="second {{ 1|wizard_active(step) }}">
-      <p>{{ _('PICK A BANNER') }}</p>
+      {% if subcategory %}
+        {% set url = url('badges.new.step2', subcategory.pk) %}
+      {% else %}
+        {% set url = None %}
+      {% endif %}
+      {% call wizard_breadcrumb(1, step, url) %}
+        <p>{{ _('PICK A BANNER') }}</p>
+      {% endcall %}
     </li>
     <li class="third {{ 2|wizard_active(step) }}">
       <p>{{ _('CONFIGURE &amp; POST') }}</p>
@@ -36,6 +45,18 @@
     </a>
   </li>
 {% endmacro %}
+
+{% macro wizard_breadcrumb(current, step, url) -%}
+  {% if current < step and url %}
+    <a href="{{ url }}">
+  {% endif %}
+  {% if caller %}
+    {{ caller() }}
+  {% endif %}
+  {% if current < step and url %}
+    </a>
+  {% endif %}
+{%- endmacro %}
 
 {% macro wizard_footer(back_href) %}
   <div id="footer-content" class="buttons">
@@ -63,7 +84,7 @@
                 <p>{{ instance.created|babel_date('medium') }}</p>
               </li>
               <li>
-                <h5>{{ _('DOWNLOADS:') }}</h5>
+                <h5>{{ _('CLICKS:') }}</h5>
                 <p>{{ instance.clicks }}</p>
               </li>
               <li>

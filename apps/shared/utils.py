@@ -1,8 +1,9 @@
-import locale
+from locale import strcoll as locale_strcoll
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect
+from django.utils.functional import lazy
 from django.utils.translation import get_language
 
 import tower
@@ -11,14 +12,28 @@ from funfactory.urlresolvers import reverse
 from product_details import product_details
 
 
-def absolutify(url, https=False, cdn=False):
+product_languages_lower = dict((locale.lower(), data) for locale, data in
+                               product_details.languages.items())
+"""
+Stores info about languages from product_details using lower-cased locale names
+(because the DB stores locales in that format).
+"""
+
+
+def absolutify(url, https=None, cdn=False):
     """
     Return the given url with an added domain and protocol.
 
     Use https=True for https, cdn=True to use settings.CDN_DOMAIN as
     the domain.
     """
-    protocol = 'http://' if not https else 'https://'
+    if https is None:
+        protocol = '//'
+    elif https is True:
+        protocol = 'https://'
+    else:
+        protocol = 'http://'
+
     if cdn and settings.CDN_DOMAIN:
         domain = settings.CDN_DOMAIN
     else:
@@ -31,7 +46,7 @@ def unicode_choice_sorted(choices):
     """
     Sorts a list of 2-tuples by the second value, using a unicode-safe sort.
     """
-    return sorted(choices, cmp=lambda x, y: locale.strcoll(x[1], y[1]))
+    return sorted(choices, cmp=lambda x, y: locale_strcoll(x[1], y[1]))
 
 
 def country_choices():
@@ -81,3 +96,6 @@ def ugettext_locale(message, locale):
     tower.activate(old_locale)
 
     return text
+
+
+reverse_lazy = lazy(reverse, unicode)

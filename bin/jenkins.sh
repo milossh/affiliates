@@ -55,6 +55,10 @@ DATABASES = {
 
 INSTALLED_APPS += ('django_nose',)
 CELERY_ALWAYS_EAGER = True
+BANNERS_HASH = (
+    '299839978f965e3b17d926572f91b4fbc340896c',
+    '5f5e8cc58fac3f658fca66be259590ea42963aa8',
+)
 SETTINGS
 
 echo "Creating database if we need it..."

@@ -1,3 +1,6 @@
+import hashlib
+import os
+
 from django.conf import settings
 from django.db import models
 
@@ -11,7 +14,9 @@ from tower import ugettext_lazy as _lazy
 from badges.models import Badge, BadgeInstance
 from banners import COLOR_CHOICES
 from shared.models import LocaleField, ModelBase
-from shared.utils import absolutify, ugettext_locale as _locale
+from shared.storage import OverwritingStorage
+from shared.utils import (absolutify, product_languages_lower,
+                          ugettext_locale as _locale)
 
 
 # L10n: Width and height are the width and height of an image.
@@ -21,6 +26,18 @@ SIZE = _lazy('%(width)sx%(height)s pixels')
 BANNER_TEMPLATE_FILE = 'apps/banners/templates/banners/banner_template.html'
 with open(path(BANNER_TEMPLATE_FILE)) as f:
     BANNER_TEMPLATE = f.read()
+
+
+def rename(instance, filename):
+    props = '%d_%s_%s_%s_%s' % (instance.banner_id,
+                                instance.image.width,
+                                instance.image.height,
+                                instance.color,
+                                instance.locale)
+    hash = hashlib.sha1(props).hexdigest()
+    extension = os.path.splitext(filename)[1]
+    name = '%s%s' % (hash, extension)
+    return os.path.join(settings.BANNER_IMAGE_PATH, name)
 
 
 class Banner(Badge):
@@ -42,7 +59,7 @@ class BannerImageManager(CachingManager):
             'area': img.image.width * img.image.height,
             'color': img.color,
             'url': img.image.url,
-            'language': settings.LANGUAGES[img.locale]
+            'language': product_languages_lower[img.locale]['native']
             } for img in self.filter(**kwargs)]
 
 
@@ -51,7 +68,8 @@ class BannerImage(CachingMixin, ModelBase):
     banner = models.ForeignKey(Banner)
     color = models.CharField(max_length=20, choices=COLOR_CHOICES,
                              verbose_name=u'image color')
-    image = models.ImageField(upload_to=settings.BANNER_IMAGE_PATH,
+    image = models.ImageField(upload_to=rename,
+                              storage=OverwritingStorage(),
                               verbose_name=u'image file',
                               max_length=settings.MAX_FILEPATH_LENGTH)
     locale = LocaleField()
@@ -80,8 +98,9 @@ class BannerInstance(BadgeInstance):
     @property
     def preview(self):
         """Return the HTML to preview this banner."""
-        return Markup('<img src="%s" alt="%s">' % (self.image.image.url,
-                                                   _lazy(self.badge.name)))
+        return Markup('<img src="%s?from_affiliates" alt="%s">' %
+                      (absolutify(self.image.image.url),
+                       _locale(self.badge.name, self.image.locale)))
 
     @property
     def code(self):

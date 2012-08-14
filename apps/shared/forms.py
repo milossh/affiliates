@@ -12,3 +12,8 @@ class FormBase(forms.Form):
         for field_name, placeholder in self.placeholders.items():
             field = self.fields[field_name]
             field.widget.attrs['placeholder'] = placeholder
+
+
+class AdminModelForm(forms.ModelForm):
+    """Special form class that handles admin-interface-specific changes."""
+    pass  # Retained for possible future use.

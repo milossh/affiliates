@@ -1,48 +1,59 @@
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.utils.translation import get_language
 
 from babel.core import Locale
 from mock import patch
 from nose.tools import eq_
-from test_utils import TestCase
-from tower import activate, ugettext as _
+from tower import activate
 
+from shared.tests import TestCase
 from shared.utils import (absolutify, current_locale, redirect,
                           ugettext_locale as _locale)
 
 
-@patch.object(settings, 'SITE_ID', 1)
 class TestAbsolutify(TestCase):
     fixtures = ['sites']
 
+    def setUp(self):
+        self.patcher = patch.object(Site.objects, 'get_current')
+        self.mock = self.patcher.start()
+        self.mock.return_value = Site(domain='badge.mo.com', name='test')
+
+    def tearDown(self):
+        self.patcher.stop()
+
     def test_basic(self):
         url = absolutify('/some/url')
-        eq_(url, 'http://badge.mo.com/some/url')
+        eq_(url, '//badge.mo.com/some/url')
 
     def test_https(self):
+        """Test that https=True forces an https url."""
         url = absolutify('/some/url', https=True)
         eq_(url, 'https://badge.mo.com/some/url')
 
     def test_cdn(self):
         with patch.object(settings, 'CDN_DOMAIN', None):
             url = absolutify('/some/url', cdn=True)
-            eq_(url, 'http://badge.mo.com/some/url')
+            eq_(url, '//badge.mo.com/some/url')
 
         with patch.object(settings, 'CDN_DOMAIN', 'cdn.badge.mo.com'):
             url = absolutify('/some/url', cdn=True)
-            eq_(url, 'http://cdn.badge.mo.com/some/url')
+            eq_(url, '//cdn.badge.mo.com/some/url')
 
 
 class TestRedirect(TestCase):
     urls = 'shared.tests.urls'
 
     def test_basic(self):
-        response = redirect('mock_view')
+        with self.activate('en-US'):
+            response = redirect('mock_view')
         eq_(response.status_code, 302)
         eq_(response['Location'], '/en-US/mock_view')
 
     def test_permanent(self):
-        response = redirect('mock_view', permanent=True)
+        with self.activate('en-US'):
+            response = redirect('mock_view', permanent=True)
         eq_(response.status_code, 301)
         eq_(response['Location'], '/en-US/mock_view')
 

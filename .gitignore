@@ -16,3 +16,5 @@ tmp/*
 *~
 media/uploads/*
 !media/uploads/.gitignore
+locale
+*.egg-info

@@ -1,6 +1,8 @@
 # This is an example settings_local.py file.
 # Copy it and add your local settings here.
 
+from urlparse import urljoin
+
 from .base import *
 
 
@@ -72,3 +74,31 @@ RESPONSYS_CAMPAIGN = 'MOZILLA_AND_YOU'
 
 SITE_ID = 2
 SITE_URL = 'http://localhost:8000'
+MEDIA_URL = urljoin(SITE_URL, MEDIA_URL)
+
+# Uncomment to configure statsd
+# STATSD_CLIENT = 'django_statsd.clients.statsd'
+# STATSD_HOST = 'localhost'
+# STATSD_PORT = 8125
+# STATSD_PREFIX = 'affiliates'
+
+# Bug 719522
+# List of hashes of banner images for upgrade campaign
+#BANNERS_HASH = (
+#    '299839978f965e3b17d926572f91b4fbc340896c',
+#    '5f5e8cc58fac3f658fca66be259590ea42963aa8',
+#)
+
+# Settings for Affiliates Facebook app
+#FACEBOOK_APP_ID = ''
+#FACEBOOK_APP_SECRET = ''
+#FACEBOOK_APP_NAMESPACE = ''
+
+# If you're doing local development without a test facebook app, set this to
+# True to wrap the facebook app in an iframe and to mock authentication.
+FACEBOOK_DEBUG = False
+
+# User ID to use for mocking Facebook authentication in debug mode.
+# To get the user id for your Facebook account, visit
+# https://developers.facebook.com/tools/explorer.
+#FACEBOOK_DEBUG_USER_ID = ''

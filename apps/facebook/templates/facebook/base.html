@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Affiliates Facebook</title>
+    {% block site_css %}
+    {% endblock %}
+  </head>
+  <body data-fx-download-url="{{ FACEBOOK_DOWNLOAD_URL }}"
+        data-app-id="{{ FACEBOOK_APP_ID }}">
+    <div class="container">
+      <nav></nav>
+      <section>
+        {% block content %}
+        {% endblock %}
+      </section>
+      <aside>
+        {% if account_link_form %}
+          <form id="account-link-form">
+            <p>Link your account!</p>
+            <input type="email" placeholder="email@example.com">
+            <button type="submit">Link!</button>
+          </form>
+        {% endif %}
+      </aside>
+    </div>
+    {% block site_js %}
+      {{ js('fb_common') }}
+    {% endblock %}
+  </body>
+</html>
